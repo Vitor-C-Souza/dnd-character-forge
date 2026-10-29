@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: characterforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-characterforge}
+      POSTGRES_USER: ${POSTGRES_USER:-characterforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-characterforge}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-characterforge} -d ${POSTGRES_DB:-characterforge}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - characterforge
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: characterforge-api
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-characterforge}
+      DB_USERNAME: ${POSTGRES_USER:-characterforge}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-characterforge}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - characterforge
+
+volumes:
+  postgres_data:
+
+networks:
+  characterforge:
+    driver: bridge
