@@ -4,7 +4,7 @@ WORKDIR /workspace
 
 COPY pom.xml .
 COPY src ./src
-RUN mvn --batch-mode --no-transfer-progress clean package -DskipTests
+RUN mvn --batch-mode --no-transfer-progress clean package
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine AS runtime
