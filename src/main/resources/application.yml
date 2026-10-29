@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: dnd-character-forge
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/characterforge}
+    username: ${DB_USERNAME:characterforge}
+    password: ${DB_PASSWORD:characterforge}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+info:
+  app:
+    name: dnd-character-forge
+    description: API de personagens de D&D 5e (2024)
