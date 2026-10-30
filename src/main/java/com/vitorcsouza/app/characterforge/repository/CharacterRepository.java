@@ -1,4 +1,4 @@
-package com.vitorcsouza.app.characterforge.domain.repository;
+package com.vitorcsouza.app.characterforge.repository;
 
 import com.vitorcsouza.app.characterforge.domain.model.Character;
 import org.springframework.data.jpa.repository.JpaRepository;
