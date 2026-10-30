@@ -1,22 +1,23 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: characterforge-postgres
+  mysql:
+    image: mysql:8.4
+    container_name: characterforge-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-characterforge}
-      POSTGRES_USER: ${POSTGRES_USER:-characterforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-characterforge}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-characterforge}
+      MYSQL_USER: ${MYSQL_USER:-characterforge}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-characterforge}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-characterforge} -d ${POSTGRES_DB:-characterforge}"]
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -u root --silent"]
       interval: 5s
       timeout: 3s
       retries: 10
-      start_period: 5s
+      start_period: 30s
     networks:
       - characterforge
 
@@ -28,13 +29,13 @@ services:
     restart: unless-stopped
     environment:
       SERVER_PORT: 8080
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-characterforge}
-      DB_USERNAME: ${POSTGRES_USER:-characterforge}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-characterforge}
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-characterforge}
+      DB_USERNAME: ${MYSQL_USER:-characterforge}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-characterforge}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
@@ -46,7 +47,7 @@ services:
       - characterforge
 
 volumes:
-  postgres_data:
+  mysql_data:
 
 networks:
   characterforge:
