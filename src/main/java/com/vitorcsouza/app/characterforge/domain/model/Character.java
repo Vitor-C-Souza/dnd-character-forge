@@ -6,6 +6,8 @@ import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "tb_characters")
 @NoArgsConstructor
@@ -64,6 +66,8 @@ public class Character extends BaseEntity {
     }
 
     public void updateAbilityScores(AbilityScores scores) {
+        Objects.requireNonNull(scores, "AbilityScores cannot be null");
+
         this.strength = scores.strength();
         this.dexterity = scores.dexterity();
         this.constitution = scores.constitution();
