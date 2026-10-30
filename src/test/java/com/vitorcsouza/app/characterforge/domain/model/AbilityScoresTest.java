@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AbilityScoresTest {
 
     @Test
-    @DisplayName("Deve criar AbilityScores com sucesso quando todos os atributos estiverem no intervalo válido (1 a 30)")
+    @DisplayName("Deve criar AbilityScores com sucesso quando todos os atributos forem válidos")
     void shouldCreateAbilityScoresSuccessfully() {
         AbilityScores scores = new AbilityScores(10, 12, 14, 8, 15, 13);
 
@@ -24,12 +24,82 @@ class AbilityScoresTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, -1, 31, 50})
-    @DisplayName("Deve lançar IllegalArgumentException quando qualquer atributo for menor que 1 ou maior que 30")
-    void shouldThrowExceptionWhenAttributeIsInvalid(int invalidValue) {
-        assertThatThrownBy(() -> new AbilityScores(invalidValue, 10, 10, 10, 10, 10))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Strength must be between 1 and 30");
+    @ValueSource(ints = {1, 30})
+    @DisplayName("Deve aceitar valores exatos dos limites mínimos (1) e máximos (30)")
+    void shouldAcceptBoundaryValues(int boundaryValue) {
+        AbilityScores scores = new AbilityScores(
+                boundaryValue, boundaryValue, boundaryValue,
+                boundaryValue, boundaryValue, boundaryValue
+        );
+
+        assertThat(scores.strength()).isEqualTo(boundaryValue);
+        assertThat(scores.charisma()).isEqualTo(boundaryValue);
     }
 
+    @Test
+    @DisplayName("Deve rejeitar valor inválido em Força (Strength)")
+    void shouldThrowExceptionWhenStrengthIsInvalid() {
+        assertThatThrownBy(() -> new AbilityScores(0, 10, 10, 10, 10, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Strength");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar valor inválido em Destreza (Dexterity)")
+    void shouldThrowExceptionWhenDexterityIsInvalid() {
+        assertThatThrownBy(() -> new AbilityScores(10, 31, 10, 10, 10, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Dexterity");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar valor inválido em Constituição (Constitution)")
+    void shouldThrowExceptionWhenConstitutionIsInvalid() {
+        assertThatThrownBy(() -> new AbilityScores(10, 10, -1, 10, 10, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Constitution");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar valor inválido em Inteligência (Intelligence)")
+    void shouldThrowExceptionWhenIntelligenceIsInvalid() {
+        assertThatThrownBy(() -> new AbilityScores(10, 10, 10, 35, 10, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Intelligence");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar valor inválido em Sabedoria (Wisdom)")
+    void shouldThrowExceptionWhenWisdomIsInvalid() {
+        assertThatThrownBy(() -> new AbilityScores(10, 10, 10, 10, 0, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Wisdom");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar valor inválido em Carisma (Charisma)")
+    void shouldThrowExceptionWhenCharismaIsInvalid() {
+        assertThatThrownBy(() -> new AbilityScores(10, 10, 10, 10, 10, 31))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Charisma");
+    }
+
+    @Test
+    @DisplayName("AbilityScores com os mesmos valores devem ser iguais e possuir o mesmo hashCode")
+    void shouldBeEqualWhenScoresAreEqual() {
+        AbilityScores first = new AbilityScores(15, 14, 13, 12, 10, 8);
+        AbilityScores second = new AbilityScores(15, 14, 13, 12, 10, 8);
+
+        assertThat(first).isEqualTo(second);
+        assertThat(first.hashCode()).isEqualTo(second.hashCode());
+    }
+
+    @Test
+    @DisplayName("AbilityScores com valores diferentes devem ser diferentes")
+    void shouldNotBeEqualWhenScoresAreDifferent() {
+        AbilityScores first = new AbilityScores(15, 14, 13, 12, 10, 8);
+        AbilityScores second = new AbilityScores(16, 14, 13, 12, 10, 8);
+
+        assertThat(first).isNotEqualTo(second);
+    }
 }

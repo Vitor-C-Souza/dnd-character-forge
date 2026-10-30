@@ -3,10 +3,7 @@ package com.vitorcsouza.app.characterforge.domain.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -32,33 +29,38 @@ public class Character extends BaseEntity {
     @Column(nullable = false)
     private Integer level;
 
+    @Getter
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private Integer strength;
 
+    @Getter
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private Integer dexterity;
 
+    @Getter
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private Integer constitution;
 
+    @Getter
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private Integer intelligence;
 
+    @Getter
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private Integer wisdom;
 
+    @Getter
+    @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private Integer charisma;
 
     public AbilityScores getAbilityScores() {
-        return new AbilityScores(
-                strength,
-                dexterity,
-                constitution,
-                intelligence,
-                wisdom,
-                charisma
-        );
+        return new AbilityScores(strength, dexterity, constitution, intelligence, wisdom, charisma);
     }
 
     public void updateAbilityScores(AbilityScores scores) {

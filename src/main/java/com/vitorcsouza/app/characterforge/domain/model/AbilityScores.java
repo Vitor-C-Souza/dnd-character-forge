@@ -17,7 +17,7 @@ public record AbilityScores(
         validateScore(charisma, "Charisma");
     }
 
-    private void validateScore(int score, String attributeName) {
+    private static void validateScore(int score, String attributeName) {
         if (score < 1 || score > 30) {
             throw new IllegalArgumentException(
                     String.format("Attribute %s must be between 1 and 30. Provided: %d", attributeName, score)
