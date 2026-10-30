@@ -61,4 +61,17 @@ class StandardArrayStrategyTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid Standard Array distribution");
     }
+
+    @Test
+    @DisplayName("Should work correctly when consumed through the AttributeGenerationStrategy interface contract")
+    void shouldWorkThroughInterfaceContract() {
+        AttributeGenerationStrategy strategy = new StandardArrayStrategy(
+                new AbilityScores(8, 15, 14, 12, 13, 10)
+        );
+
+        AbilityScores result = strategy.generate();
+
+        assertThat(result).isNotNull();
+        assertThat(result.dexterity()).isEqualTo(15);
+    }
 }
