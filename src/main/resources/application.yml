@@ -2,10 +2,10 @@ spring:
   application:
     name: dnd-character-forge
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/characterforge}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/characterforge}
     username: ${DB_USERNAME:characterforge}
     password: ${DB_PASSWORD:characterforge}
-    driver-class-name: org.postgresql.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
     hibernate:
