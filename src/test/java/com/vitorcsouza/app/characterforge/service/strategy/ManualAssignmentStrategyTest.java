@@ -52,4 +52,20 @@ class ManualAssignmentStrategyTest {
                 .hasMessageContaining("cannot be null");
     }
 
+    @Test
+    @DisplayName("Should allow repeated ability score values in manual assignment")
+    void shouldAllowRepeatedValues() {
+        AbilityScores repeatedScores = new AbilityScores(15, 15, 15, 8, 8, 8);
+        ManualAssignmentStrategy strategy = new ManualAssignmentStrategy(repeatedScores);
+
+        AbilityScores result = strategy.generate();
+
+        assertThat(result).isNotNull();
+        assertThat(result.strength()).isEqualTo(15);
+        assertThat(result.dexterity()).isEqualTo(15);
+        assertThat(result.constitution()).isEqualTo(15);
+        assertThat(result.intelligence()).isEqualTo(8);
+        assertThat(result.wisdom()).isEqualTo(8);
+        assertThat(result.charisma()).isEqualTo(8);
+    }
 }
