@@ -20,16 +20,12 @@ class AttributeGenerationServiceTest {
     @Test
     @DisplayName("Should return valid distribution when STANDARD_ARRAY mode is used with valid scores")
     void shouldGenerateWithStandardArrayMode() {
-
         AbilityScores scores = new AbilityScores(15, 14, 13, 12, 10, 8);
-
 
         AbilityScores result = service.generate(AttributeGenerationMode.STANDARD_ARRAY, scores);
 
-
         assertThat(result).isNotNull();
-        assertThat(result.strength()).isEqualTo(15);
-        assertThat(result.dexterity()).isEqualTo(14);
+        assertThat(result).isEqualTo(scores);
     }
 
     @Test
@@ -49,8 +45,7 @@ class AttributeGenerationServiceTest {
         AbilityScores result = service.generate(AttributeGenerationMode.MANUAL, scores);
 
         assertThat(result).isNotNull();
-        assertThat(result.strength()).isEqualTo(18);
-        assertThat(result.dexterity()).isEqualTo(16);
+        assertThat(result).isEqualTo(scores);
     }
 
     @Test
@@ -61,8 +56,7 @@ class AttributeGenerationServiceTest {
         AbilityScores result = service.generate(AttributeGenerationMode.MANUAL, scores);
 
         assertThat(result).isNotNull();
-        assertThat(result.strength()).isEqualTo(15);
-        assertThat(result.constitution()).isEqualTo(15);
+        assertThat(result).isEqualTo(scores);
     }
 
     @Test
