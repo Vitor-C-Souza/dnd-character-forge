@@ -1,3 +1,5 @@
+[![D&D Character Forge — Backend Java, Design Patterns e RPG](docs/assets/banner.svg)](https://canva.link/6mm47lyq3l0dg60)
+
 # D&D Character Forge
 
 [![CI](https://github.com/Vitor-C-Souza/dnd-character-forge/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/Vitor-C-Souza/dnd-character-forge/actions/workflows/ci.yml)
