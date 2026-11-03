@@ -1,72 +1,119 @@
 # D&D Character Forge
 
-API REST para criação e gerenciamento de fichas de personagens de D&D 5e (2024), desenvolvida com Java 21 e Spring Boot. O projeto tem foco em Design Patterns, DDD tático, MVC tradicional, testes e qualidade de código.
+[![CI](https://github.com/Vitor-C-Souza/dnd-character-forge/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/Vitor-C-Souza/dnd-character-forge/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot 3.5.7](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F)
+![Status](https://img.shields.io/badge/status-em_desenvolvimento-blue)
 
-> Projeto de estudo/portfólio. As regras de jogo serão implementadas gradualmente e devem ser conferidas em fontes oficiais compatíveis com a versão 2024. Esta base ainda não contém regras de negócio nem autenticação.
+**Um laboratório de backend Java com temática de RPG, construído para evoluir em uma API de criação e gerenciamento de personagens de D&D 5e (2024).**
+
+O objetivo é praticar modelagem de domínio, Design Patterns, persistência e testes em incrementos pequenos e revisáveis.
+
+> Esta documentação descreve a branch `development`. O projeto está em desenvolvimento: ainda não há controllers de personagens, CRUD HTTP ou autenticação implementados nesta branch. Não é uma implementação completa das regras de D&D.
+
+## Navegação
+
+[Estado atual](#estado-atual) · [Stack](#stack) · [Arquitetura](#arquitetura) · [Executar](#executar) · [Testes e qualidade](#testes-e-qualidade) · [Roadmap](#roadmap)
+
+## Estado atual
+
+| Componente | Implementação |
+| --- | --- |
+| Atributos | `AbilityScores`: record imutável com força, destreza, constituição, inteligência, sabedoria e carisma; valida valores entre 1 e 30 |
+| Personagem | Entidade JPA `Character`, com atualização conjunta dos atributos por `updateAbilityScores` |
+| Strategy | Interface `AttributeGenerationStrategy` com método `generate()` |
+| Atribuição manual | `ManualAssignmentStrategy` recebe um `AbilityScores` não nulo e o devolve |
+| Standard Array | `StandardArrayStrategy` valida uma distribuição contendo exatamente 15, 14, 13, 12, 10 e 8, em qualquer ordem |
+| Persistência | `CharacterRepository` e migration Flyway para a tabela `tb_characters` |
+| Infraestrutura | MySQL 8.4, Dockerfile em múltiplos estágios e Docker Compose com health checks |
+| Qualidade | Testes de atributos e estratégias, teste de contexto, JaCoCo e workflow de CI |
+
+As estratégias atuais **recebem distribuições prontas**: não sorteiam atributos nem implementam compra de pontos. O intervalo de 1 a 30 representa a validação atual do value object, sem garantir todas as restrições de criação de personagem.
 
 ## Stack
 
-- Java 21 e Maven
-- Spring Boot 3.5.x: Spring Web, Bean Validation, Spring Data JPA e Actuator
-- PostgreSQL 16 + Flyway para versionamento do schema
-- Springdoc OpenAPI/Swagger UI
-- JUnit 5, Spring Boot Test e H2 apenas para testes isolados
-- Docker Compose
-- GitHub Actions, JaCoCo e SonarCloud
+| Área | Tecnologias |
+| --- | --- |
+| Linguagem e build | Java 21, Maven |
+| Aplicação | Spring Boot 3.5.7, Spring Web, Bean Validation, Actuator |
+| Persistência | Spring Data JPA, MySQL, Flyway |
+| Documentação HTTP | Springdoc OpenAPI 2.8.13 |
+| Testes | Spring Boot Test, JUnit, H2 |
+| Entrega e qualidade | Docker Compose, GitHub Actions, JaCoCo 0.8.13, configuração SonarCloud |
 
-## Estrutura inicial
+## Arquitetura
 
-```text
-src/
-├── main/
-│   ├── java/com/vitorcsouza/app/characterforge/
-│   │   └── CharacterForgeApplication.java
-│   └── resources/
-│       ├── application.yml
-│       └── db/migration/
-└── test/
-    ├── java/com/vitorcsouza/app/characterforge/
-    │   └── CharacterForgeApplicationTest.java
-    └── resources/
-        └── application-test.yml
+A estrutura atual separa modelo, repositório e estratégias. As estratégias não dependem de HTTP; a entidade `Character` utiliza anotações JPA.
+
+```mermaid
+classDiagram
+    class AttributeGenerationStrategy {
+        <<interface>>
+        +generate() AbilityScores
+    }
+    class ManualAssignmentStrategy
+    class StandardArrayStrategy
+    class AbilityScores {
+        <<record>>
+        strength
+        dexterity
+        constitution
+        intelligence
+        wisdom
+        charisma
+    }
+    AttributeGenerationStrategy <|.. ManualAssignmentStrategy
+    AttributeGenerationStrategy <|.. StandardArrayStrategy
+    ManualAssignmentStrategy --> AbilityScores
+    StandardArrayStrategy --> AbilityScores
 ```
 
-Quando as funcionalidades forem implementadas, organize os pacotes por contexto/feature e mantenha as responsabilidades separadas: `controller`, `service`, `domain`, `repository` e `dto`. O domínio não deve depender de HTTP, persistência ou Spring Security.
+A interface permite que diferentes regras de atribuição compartilhem o mesmo contrato. Um fluxo de criação de personagem que selecione e utilize essas estratégias ainda precisa ser integrado nesta branch.
 
-## Requisitos locais
+### Exemplo de uso no código
 
-- JDK 21
-- Maven 3.9+
-- Docker Engine/Desktop com Docker Compose v2
+```java
+AbilityScores distribution = new AbilityScores(15, 14, 13, 12, 10, 8);
+AttributeGenerationStrategy strategy = new StandardArrayStrategy(distribution);
+AbilityScores result = strategy.generate();
 
-## Executar localmente
+Character character = new Character();
+character.updateAbilityScores(result);
+```
 
-1. Copie `.env.example` para `.env` e ajuste as credenciais locais.
-2. Suba o PostgreSQL:
+Importe as classes de `domain.model` e `service.strategy`; use um import explícito para a entidade `Character`, distinguindo-a de `java.lang.Character`. O exemplo ilustra o domínio, não uma chamada HTTP nem uma persistência completa.
 
-   ```bash
-   docker compose up -d postgres
-   ```
+## Executar
 
-3. Execute os testes e gere o relatório de cobertura:
+### Requisitos
 
-   ```bash
-   mvn clean verify
-   ```
+- Git;
+- JDK 21 e Maven 3.9+ para execução pela máquina;
+- Docker com Compose v2 para banco e/ou aplicação em contêiner.
 
-4. Inicie a aplicação pelo IntelliJ ou via Maven:
+### 1. Obter a branch documentada
 
-   ```bash
-   mvn spring-boot:run
-   ```
+```bash
+git clone --branch development https://github.com/Vitor-C-Souza/dnd-character-forge.git
+cd dnd-character-forge
+```
 
-A API fica disponível em `http://localhost:8080`. A interface Swagger UI estará em `http://localhost:8080/swagger-ui.html` e a documentação OpenAPI em `http://localhost:8080/api-docs`. O health check do Actuator fica em `http://localhost:8080/actuator/health`.
+### 2. Configurar o ambiente
 
-> O teste de contexto usa H2 em memória e não precisa que o PostgreSQL esteja ligado. O perfil padrão usa PostgreSQL. As credenciais de `.env.example` são exclusivamente para desenvolvimento local; não reutilize esses valores em ambientes compartilhados ou de produção.
+O `.env.example` atual ainda contém variáveis `POSTGRES_*` antigas. Para o Compose atual, crie um arquivo `.env` na raiz com as variáveis MySQL abaixo e ajuste as senhas:
 
-## Docker Compose
+```dotenv
+MYSQL_DATABASE=characterforge
+MYSQL_USER=characterforge
+MYSQL_PASSWORD=change-me-local-only
+MYSQL_ROOT_PASSWORD=change-me-root-local-only
+MYSQL_PORT=3306
+APP_PORT=8080
+```
 
-Para construir a imagem e iniciar a aplicação com o banco:
+Esses valores são exemplos locais. Não versione o `.env` nem reutilize essas senhas em ambientes compartilhados.
+
+### 3. Subir aplicação e banco
 
 ```bash
 docker compose up --build -d
@@ -74,49 +121,89 @@ docker compose ps
 docker compose logs -f app
 ```
 
-O serviço da API só inicia depois que o health check do PostgreSQL passar. Os dados do banco ficam no volume nomeado `postgres_data`.
+O serviço `app` aguarda o health check do serviço `mysql`. O Flyway cria o schema versionado e o Hibernate valida o mapeamento. Os dados persistem no volume `mysql_data`.
 
-Para encerrar:
+Para encerrar mantendo o volume:
 
 ```bash
 docker compose down
 ```
 
-Para apagar também os dados persistidos localmente (ação destrutiva):
+### Alternativa: aplicação pela IDE/Maven
 
 ```bash
-docker compose down -v
+docker compose up -d mysql
+mvn clean verify
+mvn spring-boot:run
 ```
 
-## CI e análise estática
+Antes de iniciar pelo Maven ou IDE, configure as variáveis de ambiente do processo:
 
-O workflow `.github/workflows/ci.yml` executa `mvn clean verify` em pushes e pull requests, publica os relatórios de teste/cobertura como artefato e executa a análise SonarCloud quando o projeto estiver configurado.
+| Variável | Valor local / finalidade |
+| --- | --- |
+| `DB_URL` | `jdbc:mysql://localhost:3306/characterforge` — ajuste porta e banco conforme o Compose |
+| `DB_USERNAME` | Mesmo valor de `MYSQL_USER` |
+| `DB_PASSWORD` | Mesmo valor de `MYSQL_PASSWORD` |
+| `SERVER_PORT` | Opcional; padrão `8080` |
 
-Configure no repositório GitHub:
+O arquivo `.env` é lido pelo Docker Compose; a execução Maven/IDE **não o carrega automaticamente**. `APP_PORT` altera a porta publicada do contêiner; `SERVER_PORT` configura a aplicação executada fora dele.
 
-- **Actions variable** `SONAR_ORGANIZATION`: chave da organização no SonarCloud.
-- **Actions variable** `SONAR_PROJECT_KEY`: chave do projeto no SonarCloud.
-- **Actions secret** `SONAR_TOKEN`: token de análise com permissão para o projeto.
+### Endereços locais
 
-A etapa SonarCloud fica ignorada até as duas variables estarem definidas. Configure as três entradas antes de esperar uma análise de qualidade no pipeline. O workflow aguarda o Quality Gate e falha se ele não passar. Relatório local JaCoCo: `target/site/jacoco/index.html`.
+Considerando a porta padrão 8080:
 
-## Estratégia de branches
+| Recurso | Endereço configurado |
+| --- | --- |
+| Saúde | http://localhost:8080/actuator/health |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| OpenAPI JSON | http://localhost:8080/api-docs |
 
-- `main`: versão estável; não desenvolver diretamente nela.
-- `development`: integração do trabalho concluído.
-- `feature/<nome>`: novas funcionalidades.
-- `fix/<nome>`: correções.
+O Springdoc está configurado, mas ainda não existem operações de personagens para demonstrar na documentação HTTP. As URLs acima refletem a configuração; não representam validação de uma instância em execução.
 
-Fluxo sugerido: criar uma branch de feature a partir de `development`, abrir Pull Request para `development`, aguardar CI/revisão e só então promover mudanças estáveis para `main`. Ative proteção de branch no GitHub para exigir Pull Request e checks antes do merge.
+## Testes e qualidade
 
-## Próximas etapas de desenvolvimento
+```bash
+mvn clean verify
+```
 
-1. Modelar os value objects e as regras de atributos.
-2. Implementar o padrão Strategy para os métodos de geração de atributos.
-3. Adicionar criação de personagem e validações de domínio com testes unitários.
-4. Persistir os dados com migrations Flyway e endpoints MVC.
-5. Introduzir Spring Security apenas depois das funcionalidades centrais e dos testes de domínio.
+Os testes usam H2 com perfil de teste e dispensam MySQL externo. A suíte inclui validações de `AbilityScores`, atribuição manual, Standard Array e inicialização do contexto. H2 não substitui uma verificação de integração contra o MySQL real.
 
-## Segurança e configuração
+- Relatório de testes: `target/surefire-reports/`.
+- Cobertura HTML: `target/site/jacoco/index.html`.
+- Cobertura XML: `target/site/jacoco/jacoco.xml`.
 
-Não commite `.env`, tokens, senhas reais ou configurações específicas da máquina. Em CI, use GitHub Actions Secrets/Variables. Spring Security intencionalmente não faz parte do bootstrap inicial.
+O workflow executa build/testes em pushes para `main`, `development`, `feature/**`, `fix/**` e `test/**`, além de PRs para `main` e `development`. Os relatórios são publicados como artefatos por sete dias.
+
+A análise SonarCloud depende destas configurações no GitHub:
+
+| Tipo | Nome |
+| --- | --- |
+| Actions variable | `SONAR_ORGANIZATION` |
+| Actions variable | `SONAR_PROJECT_KEY` |
+| Actions secret | `SONAR_TOKEN` |
+
+O job é condicionado às duas variables e aguarda o Quality Gate. Esta documentação não afirma um percentual de cobertura nem um resultado atual do SonarCloud.
+
+## Roadmap
+
+- [x] Modelar atributos como value object.
+- [x] Implementar atribuição manual e validação de Standard Array.
+- [x] Criar entidade, repositório e migration inicial.
+- [x] Configurar testes, relatórios, CI e infraestrutura Docker.
+- [ ] Integrar seleção das estratégias ao caso de uso de criação.
+- [ ] Implementar DTOs, serviços de aplicação e endpoints de personagens.
+- [ ] Adicionar testes de integração com MySQL.
+- [ ] Evoluir regras de criação com referências compatíveis com D&D 5e (2024).
+- [ ] Introduzir autenticação e autorização em uma etapa futura.
+
+O roadmap indica próximos passos e não uma promessa de prazo. Features em branches separadas só devem ser consideradas parte desta base após integração.
+
+## Contribuição
+
+Crie sua branch a partir de `development`, faça uma alteração focada, execute `mvn clean verify` e abra um Pull Request para `development`. Utilize o template de PR e documente mudanças de comportamento. A promoção para `main` deve acontecer após revisão e validação.
+
+## Autor
+
+**Vítor Cavalcante Souza** · [GitHub](https://github.com/Vitor-C-Souza) · [LinkedIn](https://www.linkedin.com/in/vitorcavalcantesouza/)
+
+Projeto independente de estudo e portfólio, sem afiliação oficial aos titulares de Dungeons & Dragons.
