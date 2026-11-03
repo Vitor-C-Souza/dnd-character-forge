@@ -94,4 +94,36 @@ class CharacterFactoryTest {
         assertThat(first.getName()).isEqualTo(second.getName());
         assertThat(first).isNotEqualTo(second);
     }
+
+    @Test
+    @DisplayName("Should reject invalid character created directly")
+    void shouldRejectInvalidCharacterCreatedDirectly() {
+        AbilityScores scores =
+                new AbilityScores(15, 14, 13, 12, 10, 8);
+
+        assertThatThrownBy(() -> new Character(
+                "",
+                CharacterSpecies.ELF,
+                CharacterClass.WIZARD,
+                CharacterBackground.SAGE,
+                scores
+        )).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Should create character at level one")
+    void shouldCreateCharacterAtLevelOne() {
+        AbilityScores scores =
+                new AbilityScores(15, 14, 13, 12, 10, 8);
+
+        Character character = new Character(
+                "Gandalf",
+                CharacterSpecies.HUMAN,
+                CharacterClass.WIZARD,
+                CharacterBackground.SAGE,
+                scores
+        );
+
+        assertThat(character.getLevel()).isEqualTo(1);
+    }
 }

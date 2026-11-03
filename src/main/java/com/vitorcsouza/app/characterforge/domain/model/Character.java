@@ -2,7 +2,6 @@ package com.vitorcsouza.app.characterforge.domain.model;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,7 +10,6 @@ import java.util.Objects;
 @Entity
 @Table(name = "tb_characters")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Getter
 public class Character extends BaseEntity {
     @Column(nullable = false, length = 100)
@@ -50,19 +48,44 @@ public class Character extends BaseEntity {
     @Column(nullable = false)
     private Integer charisma;
 
-    public Character(String name, CharacterSpecies species, CharacterClass characterClass,
-                     CharacterBackground background, Integer level, AbilityScores scores) {
-        this.name = name;
-        this.species = species;
-        this.characterClass = characterClass;
-        this.background = background;
-        this.level = level;
-        this.strength = scores.strength();
-        this.dexterity = scores.dexterity();
-        this.constitution = scores.constitution();
-        this.intelligence = scores.intelligence();
-        this.wisdom = scores.wisdom();
-        this.charisma = scores.charisma();
+    public Character(
+            String name,
+            CharacterSpecies species,
+            CharacterClass characterClass,
+            CharacterBackground background,
+            AbilityScores scores
+    ) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Character name cannot be null or blank"
+            );
+        }
+
+        String trimmedName = name.trim();
+
+        if (trimmedName.length() > 100) {
+            throw new IllegalArgumentException(
+                    "Character name cannot exceed 100 characters"
+            );
+        }
+
+        this.name = trimmedName;
+
+        this.species = Objects.requireNonNull(
+                species, "Character species cannot be null"
+        );
+
+        this.characterClass = Objects.requireNonNull(
+                characterClass, "Character class cannot be null"
+        );
+
+        this.background = Objects.requireNonNull(
+                background, "Character background cannot be null"
+        );
+
+        this.level = 1;
+
+        updateAbilityScores(scores);
     }
 
     public AbilityScores getAbilityScores() {
