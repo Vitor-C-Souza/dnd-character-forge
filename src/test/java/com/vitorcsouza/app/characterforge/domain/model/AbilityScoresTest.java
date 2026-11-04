@@ -3,6 +3,7 @@ package com.vitorcsouza.app.characterforge.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,7 +92,7 @@ class AbilityScoresTest {
         AbilityScores second = new AbilityScores(15, 14, 13, 12, 10, 8);
 
         assertThat(first).isEqualTo(second);
-        assertThat(first.hashCode()).isEqualTo(second.hashCode());
+        assertThat(first.hashCode()).hasSameHashCodeAs(second.hashCode());
     }
 
     @Test
@@ -101,5 +102,40 @@ class AbilityScoresTest {
         AbilityScores second = new AbilityScores(16, 14, 13, 12, 10, 8);
 
         assertThat(first).isNotEqualTo(second);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "1, -5",
+            "8, -1",
+            "9, -1",
+            "10, 0",
+            "11, 0",
+            "12, 1",
+            "15, 2",
+            "18, 4",
+            "20, 5",
+            "30, 10"
+    })
+    @DisplayName("Should calculate correct modifiers for given scores using Math.floorDiv")
+    void shouldCalculateCorrectModifiers(int score, int expectedModifier) {
+        AbilityScores scores = new AbilityScores(score, score, score, score, score, score);
+
+        assertThat(scores.strengthModifier()).isEqualTo(expectedModifier);
+        assertThat(scores.dexterityModifier()).isEqualTo(expectedModifier);
+        assertThat(scores.constitutionModifier()).isEqualTo(expectedModifier);
+        assertThat(scores.intelligenceModifier()).isEqualTo(expectedModifier);
+        assertThat(scores.wisdomModifier()).isEqualTo(expectedModifier);
+        assertThat(scores.charismaModifier()).isEqualTo(expectedModifier);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when any attribute score is out of bounds (1-30)")
+    void shouldThrowExceptionWhenScoreOutOfBounds() {
+        assertThatThrownBy(() -> new AbilityScores(0, 10, 10, 10, 10, 10))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> new AbilityScores(10, 31, 10, 10, 10, 10))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -88,6 +88,30 @@ public class Character extends BaseEntity {
         updateAbilityScores(scores);
     }
 
+    public Character(String name, CharacterSpecies species, CharacterClass characterClass, CharacterBackground background, Integer level, AbilityScores scores) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Character name cannot be null or blank");
+        }
+
+        String trimmedName = name.trim();
+
+        if (trimmedName.length() > 100) {
+            throw new IllegalArgumentException("Character name cannot exceed 100 characters");
+        }
+
+        this.name = trimmedName;
+
+        this.species = Objects.requireNonNull(species, "Character species cannot be null");
+
+        this.characterClass = Objects.requireNonNull(characterClass, "Character class cannot be null");
+
+        this.background = Objects.requireNonNull(background, "Character background cannot be null");
+
+        this.level = level;
+
+        updateAbilityScores(scores);
+    }
+
     public AbilityScores getAbilityScores() {
         return new AbilityScores(strength, dexterity, constitution, intelligence, wisdom, charisma);
     }
@@ -101,5 +125,9 @@ public class Character extends BaseEntity {
         this.intelligence = scores.intelligence();
         this.wisdom = scores.wisdom();
         this.charisma = scores.charisma();
+    }
+
+    public int getProficiencyBonus() {
+        return 2 + ((this.level - 1) / 4);
     }
 }
