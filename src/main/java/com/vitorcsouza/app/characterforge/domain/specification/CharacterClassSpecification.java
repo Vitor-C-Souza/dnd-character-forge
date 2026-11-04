@@ -16,7 +16,7 @@ public class CharacterClassSpecification implements Specification<Character> {
         if (allowedClasses.length == 0) {
             throw new IllegalArgumentException("At least one allowed class must be provided");
         }
-        this.allowedClasses = Arrays.asList(allowedClasses);
+        this.allowedClasses = List.copyOf(Arrays.asList(allowedClasses));
     }
 
     @Override
