@@ -24,4 +24,32 @@ public record AbilityScores(
             );
         }
     }
+
+    private static int calculateModifier(int score) {
+        return Math.floorDiv(score - 10, 2);
+    }
+
+    public int strengthModifier() {
+        return calculateModifier(strength);
+    }
+
+    public int dexterityModifier() {
+        return calculateModifier(dexterity);
+    }
+
+    public int constitutionModifier() {
+        return calculateModifier(constitution);
+    }
+
+    public int intelligenceModifier() {
+        return calculateModifier(intelligence);
+    }
+
+    public int wisdomModifier() {
+        return calculateModifier(wisdom);
+    }
+
+    public int charismaModifier() {
+        return calculateModifier(charisma);
+    }
 }

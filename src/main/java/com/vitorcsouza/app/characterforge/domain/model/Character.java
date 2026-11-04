@@ -87,7 +87,7 @@ public class Character extends BaseEntity {
 
         updateAbilityScores(scores);
     }
-
+    
     public AbilityScores getAbilityScores() {
         return new AbilityScores(strength, dexterity, constitution, intelligence, wisdom, charisma);
     }
@@ -101,5 +101,9 @@ public class Character extends BaseEntity {
         this.intelligence = scores.intelligence();
         this.wisdom = scores.wisdom();
         this.charisma = scores.charisma();
+    }
+
+    public int getProficiencyBonus() {
+        return ProficiencyBonus.calculate(level);
     }
 }
