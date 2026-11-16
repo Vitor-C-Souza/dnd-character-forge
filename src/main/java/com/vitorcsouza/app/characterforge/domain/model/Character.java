@@ -27,25 +27,25 @@ public class Character extends BaseEntity {
     @Column(nullable = false, length = 80)
     private CharacterBackground background;
 
-    @Column(nullable = false)
+    @Column(name = "level", columnDefinition = "SMALLINT", nullable = false)
     private Integer level;
 
-    @Column(nullable = false)
+    @Column(name = "strength", columnDefinition = "SMALLINT", nullable = false)
     private Integer strength;
 
-    @Column(nullable = false)
+    @Column(name = "dexterity", columnDefinition = "SMALLINT", nullable = false)
     private Integer dexterity;
 
-    @Column(nullable = false)
+    @Column(name = "constitution", columnDefinition = "SMALLINT", nullable = false)
     private Integer constitution;
 
-    @Column(nullable = false)
+    @Column(name = "intelligence", columnDefinition = "SMALLINT", nullable = false)
     private Integer intelligence;
 
-    @Column(nullable = false)
+    @Column(name = "wisdom", columnDefinition = "SMALLINT", nullable = false)
     private Integer wisdom;
 
-    @Column(nullable = false)
+    @Column(name = "charisma", columnDefinition = "SMALLINT", nullable = false)
     private Integer charisma;
 
     public Character(
@@ -87,7 +87,7 @@ public class Character extends BaseEntity {
 
         updateAbilityScores(scores);
     }
-    
+
     public AbilityScores getAbilityScores() {
         return new AbilityScores(strength, dexterity, constitution, intelligence, wisdom, charisma);
     }
