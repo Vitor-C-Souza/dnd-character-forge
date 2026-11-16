@@ -13,7 +13,7 @@ import java.util.Objects;
 @Table(name = "tb_characters")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@SQLDelete(sql = "UPDATE tb_characters SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE tb_characters SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP, version = version + 1 WHERE id = ? AND version = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Character extends BaseEntity {
     @Column(nullable = false, length = 100)

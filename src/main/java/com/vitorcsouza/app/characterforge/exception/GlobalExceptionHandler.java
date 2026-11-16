@@ -1,6 +1,8 @@
 package com.vitorcsouza.app.characterforge.exception;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.OptimisticLockException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -38,6 +40,17 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid Request Argument");
         problem.setType(URI.create("https://api.characterforge.com/errors/bad-request"));
+        return problem;
+    }
+
+    @ExceptionHandler({OptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ProblemDetail handleOptimisticLocking(Exception ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "The resource was updated or deleted by another transaction. Please refresh and try again."
+        );
+        problem.setTitle("Resource Conflict");
+        problem.setType(URI.create("https://api.characterforge.com/errors/conflict"));
         return problem;
     }
 }
