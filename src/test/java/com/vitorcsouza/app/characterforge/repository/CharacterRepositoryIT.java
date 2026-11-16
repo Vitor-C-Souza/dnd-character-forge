@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
-import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -32,14 +31,12 @@ class CharacterRepositoryIT {
                 scores
         );
 
-        // Act
         Character saved = characterRepository.saveAndFlush(character);
-        Optional<Character> retrieved = characterRepository.findById(saved.getId());
+
+        Character found = characterRepository.findById(saved.getId())
+                .orElseThrow(() -> new AssertionError("Character should be present"));
 
         // Assert
-        assertThat(retrieved).isPresent();
-        Character found = retrieved.get();
-
         assertThat(found.getId()).isNotNull();
         assertThat(found.getName()).isEqualTo("Thorin Escudo de Carvalho");
         assertThat(found.getLevel()).isEqualTo(1);
@@ -47,14 +44,12 @@ class CharacterRepositoryIT {
         assertThat(found.getCharisma()).isEqualTo(8);
         assertThat(found.getCreatedAt()).isNotNull();
         assertThat(found.getUpdatedAt()).isNotNull();
-        assertThat(found.getVersion()).isEqualTo(0L);
+        assertThat(found.getVersion()).isZero();
 
-        // Act - Update para validar @Version e @UpdateTimestamp
         Instant initialUpdatedAt = found.getUpdatedAt();
         found.updateAbilityScores(new AbilityScores(18, 14, 15, 10, 12, 8));
         Character updated = characterRepository.saveAndFlush(found);
 
-        // Assert - Optimistic Locking & Auditing
         assertThat(updated.getStrength()).isEqualTo(18);
         assertThat(updated.getVersion()).isEqualTo(1L);
         assertThat(updated.getUpdatedAt()).isAfterOrEqualTo(initialUpdatedAt);
