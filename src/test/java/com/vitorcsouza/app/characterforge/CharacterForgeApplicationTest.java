@@ -1,15 +1,11 @@
 package com.vitorcsouza.app.characterforge;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
-@ActiveProfiles("test")
-class CharacterForgeApplicationTest {
+class CharacterForgeApplicationTest extends AbstractIntegrationTest {
 
     @Test
     void contextLoads() {
-        // Confirma que a configuração básica da aplicação inicializa.
+        // Confirma que a aplicação inicializa corretamente.
     }
 }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1584" height="396" viewBox="0 0 1584 396" role="img" aria-labelledby="title desc">
+<title id="title">D&amp;D Character Forge</title><desc id="desc">Backend Java, Design Patterns e RPG. Projeto em desenvolvimento. Banner escuro com dado de vinte faces em verde esmeralda.</desc>
+<defs><linearGradient id="bg"><stop stop-color="#101715"/><stop offset="1" stop-color="#142c25"/></linearGradient><radialGradient id="glow"><stop stop-color="#38d9a9" stop-opacity=".18"/><stop offset="1" stop-color="#38d9a9" stop-opacity="0"/></radialGradient></defs>
+<rect width="1584" height="396" fill="url(#bg)"/><ellipse cx="1270" cy="198" rx="310" ry="245" fill="url(#glow)"/>
+<g fill="none" stroke="#38d9a9" opacity=".14"><path d="M0 330H220L265 285H840M1584 65H1430L1380 115H980M1584 345H1450L1400 295H1010"/><circle cx="840" cy="285" r="4"/><circle cx="980" cy="115" r="4"/></g>
+<path d="M76 92H120" stroke="#c4a767" stroke-width="3"/>
+<text x="76" y="162" fill="#f5f8f6" font-family="Segoe UI,Arial,sans-serif" font-size="65" font-weight="700" letter-spacing="-2">D&amp;D Character Forge</text>
+<text x="79" y="214" fill="#a9c9bd" font-family="Segoe UI,Arial,sans-serif" font-size="27" letter-spacing="1">Backend Java · Design Patterns · RPG</text>
+<rect x="78" y="253" width="244" height="35" rx="17.5" fill="#38d9a9" fill-opacity=".09" stroke="#38d9a9" stroke-opacity=".4"/>
+<text x="200" y="276" text-anchor="middle" fill="#59e5b8" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" letter-spacing="1.6">EM DESENVOLVIMENTO</text>
+<g transform="translate(1260 198)" fill="none" stroke="#38d9a9" stroke-width="2"><path d="M0-136L124-69V70L0 139L-124 70V-69Z"/><path d="M0-136L-72-40L72-40ZM-124-69L-72-40L-124 70L0 70L-72-40M124-69L72-40L124 70L0 70L72-40M-124 70L0 139L124 70M0 70L0 139M-72-40L72-40L0 70Z"/><path d="M0-136L124-69M-124-69L0-136" stroke="#c4a767"/></g>
+<text x="1260" y="205" text-anchor="middle" fill="#f5f8f6" font-family="Georgia,serif" font-size="42" font-weight="700">20</text>
+<path d="M76 341H1508" stroke="#c4a767" stroke-opacity=".25"/>
+</svg>

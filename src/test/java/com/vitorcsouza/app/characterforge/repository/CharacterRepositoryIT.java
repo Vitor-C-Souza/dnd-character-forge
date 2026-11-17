@@ -1,21 +1,18 @@
 package com.vitorcsouza.app.characterforge.repository;
 
+import com.vitorcsouza.app.characterforge.AbstractIntegrationTest;
 import com.vitorcsouza.app.characterforge.domain.model.*;
 import com.vitorcsouza.app.characterforge.domain.model.Character;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-class CharacterRepositoryIT {
+class CharacterRepositoryIT extends AbstractIntegrationTest {
     @Autowired
     private CharacterRepository characterRepository;
 
