@@ -8,6 +8,8 @@ on:
       - "feature/**"
       - "fix/**"
       - "test/**"
+      - "docs/**"
+      - "chore/**"
   pull_request:
     branches:
       - main
@@ -56,9 +58,9 @@ jobs:
 
       - name: Verify with Maven
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-          SPRING_DATASOURCE_USERNAME: characterforge
-          SPRING_DATASOURCE_PASSWORD: characterforge
+          DB_URL: jdbc:mysql://127.0.0.1:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          DB_USERNAME: characterforge
+          DB_PASSWORD: characterforge
         run: mvn --batch-mode --no-transfer-progress clean verify
 
       - name: Upload test and coverage reports
@@ -110,9 +112,9 @@ jobs:
 
       - name: Verify and generate coverage report
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-          SPRING_DATASOURCE_USERNAME: characterforge
-          SPRING_DATASOURCE_PASSWORD: characterforge
+          DB_URL: jdbc:mysql://127.0.0.1:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          DB_USERNAME: characterforge
+          DB_PASSWORD: characterforge
         run: mvn --batch-mode --no-transfer-progress clean verify
 
       - name: Analyze with SonarCloud

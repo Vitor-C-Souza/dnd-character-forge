@@ -1,122 +1,294 @@
+[![D&D Character Forge — Backend Java, Design Patterns e RPG](docs/assets/banner.svg)](https://canva.link/6mm47lyq3l0dg60)
+
 # D&D Character Forge
 
-API REST para criação e gerenciamento de fichas de personagens de D&D 5e (2024), desenvolvida com Java 21 e Spring Boot. O projeto tem foco em Design Patterns, DDD tático, MVC tradicional, testes e qualidade de código.
+[![CI](https://github.com/Vitor-C-Souza/dnd-character-forge/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/Vitor-C-Souza/dnd-character-forge/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot 3.5.7](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F)
+![MySQL 8.4](https://img.shields.io/badge/MySQL-8.4-4479A1)
 
-> Projeto de estudo/portfólio. As regras de jogo serão implementadas gradualmente e devem ser conferidas em fontes oficiais compatíveis com a versão 2024. Esta base ainda não contém regras de negócio nem autenticação.
+**API REST para criação e gerenciamento de fichas de personagens de D&D 5e (2024), desenvolvida com Java 21 e Spring
+Boot.**
+
+O projeto tem como objetivo aplicar modelagem de domínio rica, Design Patterns, persistência relacional com
+versionamento de schema e testes automatizados em incrementos revisáveis.
+
+> Projeto de estudo e portfólio, sem afiliação oficial aos titulares de Dungeons & Dragons. As regras de D&D 5e (2024)
+> são implementadas de forma gradual e autenticação/autorização ainda não fazem parte do escopo atual.
+
+## Navegação
+
+[Estado atual](#estado-atual) · [Stack](#stack) · [Arquitetura e Padrões](#arquitetura-e-padrões) · [Endpoints da API](#endpoints-da-api) · [Executar localmente](#executar-localmente) · [Testes e qualidade](#testes-e-qualidade) · [Estratégia de branches](#estratégia-de-branches) · [Autor](#autor)
+
+## Estado atual
+
+| Componente                    | Implementação                                                                                                                                                                                        |
+|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Atributos e Modificadores** | `AbilityScores`: record imutável (`@Embeddable`) validando pontuações entre `1` e `30`, com cálculo de modificadores (`Math.floorDiv(score - 10, 2)`) para todos os 6 atributos                      |
+| **Bônus de Proficiência**     | `ProficiencyBonus`: cálculo estático baseado no nível do personagem (`1` a `20`), seguindo a progressão `2 + (level - 1) / 4`                                                                        |
+| **Entidade Personagem**       | Entidade JPA `Character` herdando `BaseEntity` (UUID, auditoria de timestamps, `@Version` para optimistic locking e exclusão lógica com `@SQLDelete` / `@SQLRestriction`)                            |
+| **Strategy & Selector**       | `AttributeGenerationStrategy` (`ManualAssignmentStrategy` e `StandardArrayStrategy`) orquestrada pelo seletor `AttributeGenerationService` via `AttributeGenerationMode`                             |
+| **Factory**                   | `CharacterFactory`: encapsula a instanciação validada de `Character` na camada de serviço                                                                                                            |
+| **Specification**             | Interface funcional `Specification<T>` com composição booleana (`and`, `or`, `not`) e regras de domínio (`CharacterClassSpecification`, `MinimumLevelSpecification`, `MinimumStrengthSpecification`) |
+| **API REST e Exceções**       | `CharacterController` (`/api/v1/characters`), DTOs de entrada/saída e `GlobalExceptionHandler` padronizado com RFC 7807 (`ProblemDetail`)                                                            |
+| **Persistência e Infra**      | MySQL 8.4, Flyway (`V1__CREATE_TABLE.sql`), Dockerfile multi-stage e Docker Compose com health checks                                                                                                |
+| **Qualidade e CI**            | Testes unitários (JUnit 5/Mockito) e integração real com MySQL (Surefire/Failsafe), JaCoCo e pipeline GitHub Actions + SonarCloud                                                                    |
 
 ## Stack
 
-- Java 21 e Maven
-- Spring Boot 3.5.x: Spring Web, Bean Validation, Spring Data JPA e Actuator
-- PostgreSQL 16 + Flyway para versionamento do schema
-- Springdoc OpenAPI/Swagger UI
-- JUnit 5, Spring Boot Test e H2 apenas para testes isolados
-- Docker Compose
-- GitHub Actions, JaCoCo e SonarCloud
+| Área                    | Tecnologias                                                                |
+|:------------------------|:---------------------------------------------------------------------------|
+| **Linguagem e Build**   | Java 21, Maven 3.9+                                                        |
+| **Framework**           | Spring Boot 3.5.7 (Spring Web, Bean Validation, Spring Data JPA, Actuator) |
+| **Banco e Migrations**  | MySQL 8.4, Flyway                                                          |
+| **Documentação HTTP**   | Springdoc OpenAPI 2.8.13 (Swagger UI)                                      |
+| **Testes**              | JUnit 5, Mockito, AssertJ, Spring Boot Test (unitários e integração `*IT`) |
+| **Infraestrutura e CI** | Docker, Docker Compose, GitHub Actions, JaCoCo 0.8.13, SonarCloud          |
 
-## Estrutura inicial
+## Arquitetura e Padrões
+
+A estrutura separa explicitamente domínio, aplicação, persistência e camada web:
 
 ```text
-src/
-├── main/
-│   ├── java/com/vitorcsouza/app/characterforge/
-│   │   └── CharacterForgeApplication.java
-│   └── resources/
-│       ├── application.yml
-│       └── db/migration/
-└── test/
-    ├── java/com/vitorcsouza/app/characterforge/
-    │   └── CharacterForgeApplicationTest.java
-    └── resources/
-        └── application-test.yml
+src/main/java/com/vitorcsouza/app/characterforge/
+├── config/            # Configuração do OpenAPI / Swagger
+├── controller/        # Endpoints REST (/api/v1/characters)
+├── domain/
+│   ├── model/         # Entidades (Character, BaseEntity), Value Objects (AbilityScores), Enums e regras (ProficiencyBonus)
+│   └── specification/ # Padrão Specification composicional (and, or, not)
+├── dto/               # Contratos de request e response da API
+├── exception/         # Tratamento global de erros com ProblemDetail (RFC 7807)
+├── repository/        # Repositórios Spring Data JPA
+└── service/
+    ├── strategy/      # Estratégias de geração de atributos (Manual e Standard Array)
+    ├── AttributeGenerationService.java  # Strategy Selector
+    ├── CharacterApplicationService.java # Orquestração de casos de uso
+    └── CharacterFactory.java            # Factory de criação de personagens
+
 ```
 
-Quando as funcionalidades forem implementadas, organize os pacotes por contexto/feature e mantenha as responsabilidades separadas: `controller`, `service`, `domain`, `repository` e `dto`. O domínio não deve depender de HTTP, persistência ou Spring Security.
+```mermaid
+classDiagram
+    class CharacterApplicationService
+    class CharacterFactory {
+        +create(name, species, characterClass, background, scores) Character
+    }
+    class AttributeGenerationService {
+        +generate(mode, scores) AbilityScores
+    }
+    class AttributeGenerationStrategy {
+        <<interface>>
+        +generate() AbilityScores
+    }
+    class ManualAssignmentStrategy
+    class StandardArrayStrategy
+    class Specification~T~ {
+        <<interface>>
+        +isSatisfiedBy(candidate) boolean
+        +and(other) Specification~T~
+        +or(other) Specification~T~
+        +not() Specification~T~
+    }
+    class Character
+    class AbilityScores {
+        <<record>>
+        +strengthModifier() int
+        +dexterityModifier() int
+    }
 
-## Requisitos locais
+    CharacterApplicationService --> AttributeGenerationService
+    CharacterApplicationService --> CharacterFactory
+    AttributeGenerationService --> AttributeGenerationStrategy
+    AttributeGenerationStrategy <|.. ManualAssignmentStrategy
+    AttributeGenerationStrategy <|.. StandardArrayStrategy
+    CharacterFactory --> Character
+    Character *-- AbilityScores
+    Specification ..> Character: avalia
 
-- JDK 21
-- Maven 3.9+
-- Docker Engine/Desktop com Docker Compose v2
+```
+
+### Exemplo de uso no código
+
+> **Nota:** O construtor padrão sem argumentos de `Character` é `protected` por exigência da especificação JPA, portanto
+> `new Character()` não deve ser utilizado diretamente. Utilize `CharacterFactory` ou o construtor completo de domínio.
+
+```java
+import com.vitorcsouza.app.characterforge.domain.model.AbilityScores;
+import com.vitorcsouza.app.characterforge.domain.model.Character;
+import com.vitorcsouza.app.characterforge.domain.model.CharacterBackground;
+import com.vitorcsouza.app.characterforge.domain.model.CharacterClass;
+import com.vitorcsouza.app.characterforge.domain.model.CharacterSpecies;
+import com.vitorcsouza.app.characterforge.domain.model.ProficiencyBonus;
+import com.vitorcsouza.app.characterforge.domain.specification.CharacterClassSpecification;
+import com.vitorcsouza.app.characterforge.domain.specification.MinimumStrengthSpecification;
+import com.vitorcsouza.app.characterforge.domain.specification.Specification;
+import com.vitorcsouza.app.characterforge.service.AttributeGenerationService;
+import com.vitorcsouza.app.characterforge.service.CharacterFactory;
+import com.vitorcsouza.app.characterforge.service.strategy.AttributeGenerationMode;
+
+// 1. Seleção e validação de atributos via Strategy Selector
+AttributeGenerationService generationService = new AttributeGenerationService();
+        AbilityScores rawScores = new AbilityScores(15, 14, 13, 12, 10, 8);
+        AbilityScores validatedScores = generationService.generate(AttributeGenerationMode.STANDARD_ARRAY, rawScores);
+
+        // 2. Criação do personagem via Factory
+        CharacterFactory factory = new CharacterFactory();
+        Character character = factory.create(
+                "Thorin Escudo de Carvalho",
+                CharacterSpecies.DWARF,
+                CharacterClass.FIGHTER,
+                CharacterBackground.SOLDIER,
+                validatedScores
+        );
+
+        // 3. Cálculo de modificadores e bônus de proficiência
+        int strModifier = character.getAbilityScores().strengthModifier(); // +2
+        int profBonus = ProficiencyBonus.calculate(character.getLevel());     // +2 (nível 1)
+
+        // 4. Avaliação de regras combinadas com Specification
+        Specification<Character> heavyArmorEligible =
+                new CharacterClassSpecification(CharacterClass.FIGHTER, CharacterClass.PALADIN)
+                        .and(new MinimumStrengthSpecification(13));
+
+        boolean isEligible = heavyArmorEligible.isSatisfiedBy(character); // true
+
+```
+
+## Endpoints da API
+
+| Método   | Rota                                     | Descrição                                                             |
+|----------|------------------------------------------|-----------------------------------------------------------------------|
+| `POST`   | `/api/v1/characters`                     | Cria um novo personagem aplicando a estratégia de atributos escolhida |
+| `GET`    | `/api/v1/characters`                     | Lista os personagens ativos (não excluídos logicamente)               |
+| `GET`    | `/api/v1/characters/{id}`                | Busca um personagem ativo por UUID                                    |
+| `PATCH`  | `/api/v1/characters/{id}/ability-scores` | Atualiza os atributos de um personagem existente                      |
+| `DELETE` | `/api/v1/characters/{id}`                | Realiza a exclusão lógica (soft delete) do personagem                 |
 
 ## Executar localmente
 
-1. Copie `.env.example` para `.env` e ajuste as credenciais locais.
-2. Suba o PostgreSQL:
+### Requisitos
 
-   ```bash
-   docker compose up -d postgres
-   ```
+* Git
+* JDK 21 e Maven 3.9+ (para execução local pela IDE ou terminal)
+* Docker Engine / Docker Desktop com Docker Compose v2
 
-3. Execute os testes e gere o relatório de cobertura:
+### 1. Clonar e configurar variáveis de ambiente
 
-   ```bash
-   mvn clean verify
-   ```
+```bash
+git clone --branch development [https://github.com/Vitor-C-Souza/dnd-character-forge.git](https://github.com/Vitor-C-Souza/dnd-character-forge.git)
+cd dnd-character-forge
+cp .env.example .env
 
-4. Inicie a aplicação pelo IntelliJ ou via Maven:
+```
 
-   ```bash
-   mvn spring-boot:run
-   ```
+Ajuste as credenciais locais no arquivo `.env` (nunca versione este arquivo).
 
-A API fica disponível em `http://localhost:8080`. A interface Swagger UI estará em `http://localhost:8080/swagger-ui.html` e a documentação OpenAPI em `http://localhost:8080/api-docs`. O health check do Actuator fica em `http://localhost:8080/actuator/health`.
-
-> O teste de contexto usa H2 em memória e não precisa que o PostgreSQL esteja ligado. O perfil padrão usa PostgreSQL. As credenciais de `.env.example` são exclusivamente para desenvolvimento local; não reutilize esses valores em ambientes compartilhados ou de produção.
-
-## Docker Compose
-
-Para construir a imagem e iniciar a aplicação com o banco:
+### 2. Executar aplicação e banco via Docker Compose
 
 ```bash
 docker compose up --build -d
 docker compose ps
 docker compose logs -f app
+
 ```
 
-O serviço da API só inicia depois que o health check do PostgreSQL passar. Os dados do banco ficam no volume nomeado `postgres_data`.
+O serviço `app` aguarda o health check do `mysql` ficar saudável, executa as migrations do Flyway e valida o schema JPA.
+Os dados ficam persistidos no volume `mysql_data`.
 
-Para encerrar:
+Para encerrar mantendo os dados:
 
 ```bash
 docker compose down
+
 ```
 
-Para apagar também os dados persistidos localmente (ação destrutiva):
+Para encerrar e apagar o volume do banco local:
 
 ```bash
 docker compose down -v
+
 ```
 
-## CI e análise estática
+### 3. Alternativa: executar aplicação pela IDE ou Maven
 
-O workflow `.github/workflows/ci.yml` executa `mvn clean verify` em pushes e pull requests, publica os relatórios de teste/cobertura como artefato e executa a análise SonarCloud quando o projeto estiver configurado.
+1. Suba apenas o banco de dados MySQL via Docker Compose:
 
-Configure no repositório GitHub:
+```bash
+docker compose up -d mysql
 
-- **Actions variable** `SONAR_ORGANIZATION`: chave da organização no SonarCloud.
-- **Actions variable** `SONAR_PROJECT_KEY`: chave do projeto no SonarCloud.
-- **Actions secret** `SONAR_TOKEN`: token de análise com permissão para o projeto.
+```
 
-A etapa SonarCloud fica ignorada até as duas variables estarem definidas. Configure as três entradas antes de esperar uma análise de qualidade no pipeline. O workflow aguarda o Quality Gate e falha se ele não passar. Relatório local JaCoCo: `target/site/jacoco/index.html`.
+2. Configure as variáveis de ambiente na sua IDE ou terminal (conforme documentado em `.env.example`):
+
+* `DB_URL=jdbc:mysql://localhost:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC`
+* `DB_USERNAME=characterforge`
+* `DB_PASSWORD=<mesma_senha_definida_em_MYSQL_PASSWORD>`
+* `SERVER_PORT=8080` (opcional)
+
+
+3. Execute os testes ou inicie a aplicação:
+
+```bash
+mvn clean verify
+mvn spring-boot:run
+
+```
+
+### Endereços locais
+
+| Recurso             | URL                                       |
+|---------------------|-------------------------------------------|
+| **API Base**        | `http://localhost:8080/api/v1/characters` |
+| **Swagger UI**      | `http://localhost:8080/swagger-ui.html`   |
+| **OpenAPI JSON**    | `http://localhost:8080/api-docs`          |
+| **Actuator Health** | `http://localhost:8080/actuator/health`   |
+
+## Testes e qualidade
+
+A suíte é dividida entre testes unitários (`*Test.java`, executados pelo Maven Surefire) e testes de integração contra
+MySQL (`*IT.java`, executados pelo Maven Failsafe):
+
+```bash
+mvn clean verify
+
+```
+
+> **Requisito para testes de integração (`*IT`):** Como `application-test.yml` valida o schema real com Flyway e MySQL,
+> certifique-se de que uma instância MySQL esteja acessível (via `docker compose up -d mysql` ou serviço local
+> compatível
+> com `DB_URL`).
+
+* **Relatórios de testes:** `target/surefire-reports/` e `target/failsafe-reports/`
+* **Relatório de cobertura JaCoCo:** `target/site/jacoco/index.html` e `target/site/jacoco/jacoco.xml`
+* **Cobertura medida (`jacoco.csv`):** **95,95%** de instruções (1.138/1.186), **90,38%** de branches (47/52),
+  **95,49%** de linhas (233/244) e **90,28%** de métodos (65/72).
+
+### Pipeline CI e SonarCloud
+
+O workflow `.github/workflows/ci.yml` sobe um serviço MySQL 8.4, executa `mvn clean verify` e publica os relatórios como
+artefatos por 7 dias.
+
+A etapa `SonarCloud analysis` é condicionada às variáveis do repositório no GitHub (**Settings → Secrets and variables →
+Actions**):
+
+| Tipo                 | Nome                 | Finalidade                          |
+|----------------------|----------------------|-------------------------------------|
+| **Actions variable** | `SONAR_ORGANIZATION` | Chave da organização no SonarCloud  |
+| **Actions variable** | `SONAR_PROJECT_KEY`  | Chave do projeto no SonarCloud      |
+| **Actions secret**   | `SONAR_TOKEN`        | Token de autenticação do SonarCloud |
+
+Enquanto `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` não estiverem configuradas no repositório, o job
+`SonarCloud analysis` é ignorado (`skipped`) intencionalmente sem bloquear o build. Quando configuradas, o pipeline
+executa a análise e aguarda o Quality Gate (`-Dsonar.qualitygate.wait=true`).
 
 ## Estratégia de branches
 
-- `main`: versão estável; não desenvolver diretamente nela.
-- `development`: integração do trabalho concluído.
-- `feature/<nome>`: novas funcionalidades.
-- `fix/<nome>`: correções.
+* `main`: branch estável de produção/release (protegida).
+* `development`: branch de integração das entregas concluídas.
+* `feature/<nome>`, `fix/<nome>`, `docs/<nome>`, `test/<nome>`: branches de trabalho criadas a partir de `development` e
+  integradas via Pull Request após aprovação do CI.
 
-Fluxo sugerido: criar uma branch de feature a partir de `development`, abrir Pull Request para `development`, aguardar CI/revisão e só então promover mudanças estáveis para `main`. Ative proteção de branch no GitHub para exigir Pull Request e checks antes do merge.
+## Autor
 
-## Próximas etapas de desenvolvimento
-
-1. Modelar os value objects e as regras de atributos.
-2. Implementar o padrão Strategy para os métodos de geração de atributos.
-3. Adicionar criação de personagem e validações de domínio com testes unitários.
-4. Persistir os dados com migrations Flyway e endpoints MVC.
-5. Introduzir Spring Security apenas depois das funcionalidades centrais e dos testes de domínio.
-
-## Segurança e configuração
-
-Não commite `.env`, tokens, senhas reais ou configurações específicas da máquina. Em CI, use GitHub Actions Secrets/Variables. Spring Security intencionalmente não faz parte do bootstrap inicial.
+**Vítor Cavalcante
+Souza** · [GitHub](https://github.com/Vitor-C-Souza) · [LinkedIn](https://www.linkedin.com/in/vitorcavalcantesouza/)
