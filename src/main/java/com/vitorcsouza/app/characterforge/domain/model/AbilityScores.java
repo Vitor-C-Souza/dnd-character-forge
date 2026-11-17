@@ -1,11 +1,26 @@
 package com.vitorcsouza.app.characterforge.domain.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+
+@Embeddable
 public record AbilityScores(
+        @Column(name = "strength", columnDefinition = "SMALLINT", nullable = false)
         int strength,
+
+        @Column(name = "dexterity", columnDefinition = "SMALLINT", nullable = false)
         int dexterity,
+
+        @Column(name = "constitution", columnDefinition = "SMALLINT", nullable = false)
         int constitution,
+
+        @Column(name = "intelligence", columnDefinition = "SMALLINT", nullable = false)
         int intelligence,
+
+        @Column(name = "wisdom", columnDefinition = "SMALLINT", nullable = false)
         int wisdom,
+
+        @Column(name = "charisma", columnDefinition = "SMALLINT", nullable = false)
         int charisma
 ) {
     public AbilityScores {

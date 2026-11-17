@@ -1,11 +1,14 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:characterforge-test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/characterforge}
+    username: ${DB_USERNAME:characterforge}
+    password: ${DB_PASSWORD:characterforge}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    enabled: true
+
   jpa:
     hibernate:
-      ddl-auto: none
-  flyway:
-    enabled: false
+      ddl-auto: validate
+    show-sql: true
