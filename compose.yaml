@@ -13,7 +13,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -u root --silent"]
+      test: [ "CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -u root --silent" ]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     environment:
       SERVER_PORT: 8080
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-characterforge}
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-characterforge}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: ${MYSQL_USER:-characterforge}
       DB_PASSWORD: ${MYSQL_PASSWORD:-characterforge}
     ports:
@@ -38,7 +38,7 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 5
