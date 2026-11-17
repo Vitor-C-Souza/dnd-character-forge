@@ -175,7 +175,7 @@ AttributeGenerationService generationService = new AttributeGenerationService();
 ### 1. Clonar e configurar variáveis de ambiente
 
 ```bash
-git clone --branch development [https://github.com/Vitor-C-Souza/dnd-character-forge.git](https://github.com/Vitor-C-Souza/dnd-character-forge.git)
+git clone --branch development https://github.com/Vitor-C-Souza/dnd-character-forge.git
 cd dnd-character-forge
 cp .env.example .env
 
