@@ -209,27 +209,36 @@ Para encerrar e apagar o volume do banco local:
 docker compose down -v
 ```
 
-### 3. Alternativa: executar pela IDE ou pelo Maven
+### 3. Executar a aplicação pela IDE ou pelo Maven
 
-1. Suba apenas o MySQL:
+Para iniciar a aplicação fora do Docker Compose, disponibilize um MySQL 8.4 acessível. Se quiser usar o banco definido no Compose do projeto, suba somente o serviço `mysql`:
 
-   ```bash
-   docker compose up -d mysql
-   ```
+```bash
+docker compose up -d mysql
+```
 
-2. Configure as variáveis de ambiente na IDE ou no terminal (conforme `.env.example`):
+Configure as variáveis de ambiente na IDE ou no terminal (conforme `.env.example`):
 
-   * `DB_URL=jdbc:mysql://localhost:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC`
-   * `DB_USERNAME=characterforge`
-   * `DB_PASSWORD=<mesma_senha_definida_em_MYSQL_PASSWORD>`
-   * `SERVER_PORT=8080` (opcional)
+* `DB_URL=jdbc:mysql://localhost:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC`
+* `DB_USERNAME=characterforge`
+* `DB_PASSWORD=<mesma_senha_definida_em_MYSQL_PASSWORD>`
+* `SERVER_PORT=8080` (opcional)
 
-3. Execute os testes ou inicie a aplicação:
+Inicie a aplicação:
 
-   ```bash
-   mvn clean verify
-   mvn spring-boot:run
-   ```
+```bash
+mvn spring-boot:run
+```
+
+### 4. Executar os testes
+
+Execute a suíte completa com:
+
+```bash
+mvn clean verify
+```
+
+Os testes de integração que estendem `AbstractIntegrationTest` — incluindo `CharacterForgeApplicationTest` e os testes `*IT.java` executados pelo Maven Failsafe — usam **Testcontainers** para iniciar automaticamente um container efêmero do MySQL 8.4 (`mysql:8.4`). Os demais testes unitários não dependem de um banco MySQL externo. Portanto, para executar a suíte completa, basta manter o Docker Engine / Docker Desktop em execução: **não é necessário subir previamente o serviço MySQL do Compose nem configurar um banco externo**.
 
 ### Endereços locais
 
