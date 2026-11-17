@@ -175,10 +175,9 @@ AttributeGenerationService generationService = new AttributeGenerationService();
 ### 1. Clonar e configurar variáveis de ambiente
 
 ```bash
-git clone --branch development [https://github.com/Vitor-C-Souza/dnd-character-forge.git](https://github.com/Vitor-C-Souza/dnd-character-forge.git)
+git clone --branch development https://github.com/Vitor-C-Souza/dnd-character-forge.git
 cd dnd-character-forge
 cp .env.example .env
-
 ```
 
 Ajuste as credenciais locais no arquivo `.env` (nunca versione este arquivo).
@@ -189,7 +188,6 @@ Ajuste as credenciais locais no arquivo `.env` (nunca versione este arquivo).
 docker compose up --build -d
 docker compose ps
 docker compose logs -f app
-
 ```
 
 O serviço `app` aguarda o health check do `mysql` ficar saudável, executa as migrations do Flyway e valida o schema JPA.
