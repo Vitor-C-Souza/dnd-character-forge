@@ -27,22 +27,6 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_DATABASE: characterforge
-          MYSQL_USER: characterforge
-          MYSQL_PASSWORD: characterforge
-          MYSQL_ROOT_PASSWORD: change-me-root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=change-me-root"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=10
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,10 +41,6 @@ jobs:
           cache: maven
 
       - name: Verify with Maven
-        env:
-          DB_URL: jdbc:mysql://127.0.0.1:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-          DB_USERNAME: characterforge
-          DB_PASSWORD: characterforge
         run: mvn --batch-mode --no-transfer-progress clean verify
 
       - name: Upload test and coverage reports
@@ -81,22 +61,6 @@ jobs:
     needs: verify
     if: ${{ vars.SONAR_ORGANIZATION != '' && vars.SONAR_PROJECT_KEY != '' }}
 
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_DATABASE: characterforge
-          MYSQL_USER: characterforge
-          MYSQL_PASSWORD: characterforge
-          MYSQL_ROOT_PASSWORD: change-me-root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=change-me-root"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=10
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,10 +75,6 @@ jobs:
           cache: maven
 
       - name: Verify and generate coverage report
-        env:
-          DB_URL: jdbc:mysql://127.0.0.1:3306/characterforge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-          DB_USERNAME: characterforge
-          DB_PASSWORD: characterforge
         run: mvn --batch-mode --no-transfer-progress clean verify
 
       - name: Analyze with SonarCloud
