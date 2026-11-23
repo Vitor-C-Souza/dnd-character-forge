@@ -60,6 +60,35 @@ class AttributeGenerationServiceTest {
     }
 
     @Test
+    @DisplayName("Should return valid distribution when POINT_BUY mode is used within budget and limits")
+    void shouldGenerateWithPointBuyMode() {
+        AbilityScores scores = new AbilityScores(15, 14, 13, 12, 10, 8);
+
+        AbilityScores result = service.generate(AttributeGenerationMode.POINT_BUY, scores);
+
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(scores);
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when POINT_BUY mode exceeds budget")
+    void shouldThrowExceptionWhenPointBuyBudgetIsExceeded() {
+        AbilityScores scores = new AbilityScores(15, 15, 15, 9, 8, 8);
+
+        assertThatThrownBy(() -> service.generate(AttributeGenerationMode.POINT_BUY, scores))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when POINT_BUY mode has score out of bounds")
+    void shouldThrowExceptionWhenPointBuyScoreIsOutOfBounds() {
+        AbilityScores scores = new AbilityScores(7, 14, 13, 12, 10, 8);
+
+        assertThatThrownBy(() -> service.generate(AttributeGenerationMode.POINT_BUY, scores))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     @DisplayName("Should throw NullPointerException when generation mode is null")
     void shouldThrowExceptionWhenModeIsNull() {
         AbilityScores scores = new AbilityScores(15, 14, 13, 12, 10, 8);
@@ -76,5 +105,4 @@ class AttributeGenerationServiceTest {
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Ability scores cannot be null");
     }
-
 }

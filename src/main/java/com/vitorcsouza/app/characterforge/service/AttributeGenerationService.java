@@ -1,10 +1,7 @@
 package com.vitorcsouza.app.characterforge.service;
 
 import com.vitorcsouza.app.characterforge.domain.model.AbilityScores;
-import com.vitorcsouza.app.characterforge.service.strategy.AttributeGenerationMode;
-import com.vitorcsouza.app.characterforge.service.strategy.AttributeGenerationStrategy;
-import com.vitorcsouza.app.characterforge.service.strategy.ManualAssignmentStrategy;
-import com.vitorcsouza.app.characterforge.service.strategy.StandardArrayStrategy;
+import com.vitorcsouza.app.characterforge.service.strategy.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -19,6 +16,7 @@ public class AttributeGenerationService {
         AttributeGenerationStrategy strategy = switch (mode) {
             case STANDARD_ARRAY -> new StandardArrayStrategy(scores);
             case MANUAL -> new ManualAssignmentStrategy(scores);
+            case POINT_BUY -> new PointBuyStrategy(scores);
         };
 
         return strategy.generate();
