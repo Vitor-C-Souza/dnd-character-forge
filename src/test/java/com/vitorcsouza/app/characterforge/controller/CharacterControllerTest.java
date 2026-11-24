@@ -167,4 +167,89 @@ class CharacterControllerTest {
 
         mockMvc.perform(delete("/api/v1/characters/{id}", id)).andExpect(status().isNotFound()).andExpect(jsonPath("$.title").value("Resource Not Found"));
     }
+
+    @Test
+    void shouldCreateCharacterWithPointBuySuccessfully() throws Exception {
+        UUID id = UUID.randomUUID();
+        CreateCharacterRequest request = new CreateCharacterRequest(
+                "Drizzt",
+                CharacterSpecies.ELF,
+                CharacterClass.RANGER,
+                CharacterBackground.GUIDE,
+                AttributeGenerationMode.POINT_BUY,
+                new AbilityScoresRequest(15, 14, 13, 12, 10, 8)
+        );
+
+        CharacterResponse response = new CharacterResponse(
+                id,
+                "Drizzt",
+                CharacterSpecies.ELF,
+                CharacterClass.RANGER,
+                CharacterBackground.GUIDE,
+                1,
+                2,
+                new CharacterResponse.AbilityScoresResponse(15, 14, 13, 12, 10, 8),
+                Instant.now(),
+                Instant.now()
+        );
+
+        given(characterApplicationService.createCharacter(any(CreateCharacterRequest.class))).willReturn(response);
+
+        mockMvc.perform(post("/api/v1/characters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.name").value("Drizzt"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenPointBuyRuleIsViolated() throws Exception {
+        CreateCharacterRequest request = new CreateCharacterRequest(
+                "Drizzt",
+                CharacterSpecies.ELF,
+                CharacterClass.RANGER,
+                CharacterBackground.GUIDE,
+                AttributeGenerationMode.POINT_BUY,
+                new AbilityScoresRequest(15, 15, 15, 9, 8, 8)
+        );
+
+        given(characterApplicationService.createCharacter(any(CreateCharacterRequest.class)))
+                .willThrow(new IllegalArgumentException("Point Buy budget exceeded: cost is 28, maximum allowed is 27."));
+
+        mockMvc.perform(post("/api/v1/characters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Request Argument"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenGenerationModeIsInvalid() throws Exception {
+        String invalidModeJson = """
+                {
+                  "name": "Drizzt",
+                  "species": "ELF",
+                  "characterClass": "RANGER",
+                  "background": "GUIDE",
+                  "generationMode": "INVALID_MODE",
+                  "abilityScores": {
+                    "strength": 15,
+                    "dexterity": 14,
+                    "constitution": 13,
+                    "intelligence": 12,
+                    "wisdom": 10,
+                    "charisma": 8
+                  }
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/characters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidModeJson))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(characterApplicationService);
+    }
 }

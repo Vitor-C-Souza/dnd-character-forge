@@ -94,4 +94,72 @@ class CharacterApiIT extends AbstractIntegrationTest {
         );
         assertThat(count).isEqualTo(1);
     }
+
+    @Test
+    void shouldCreateCharacterWithPointBuyAndRejectInvalidPointBuyEndToEnd() throws Exception {
+        String validName = "PB-Valid-" + UUID.randomUUID();
+
+        CreateCharacterRequest validRequest = new CreateCharacterRequest(
+                validName,
+                CharacterSpecies.HUMAN,
+                CharacterClass.FIGHTER,
+                CharacterBackground.SOLDIER,
+                AttributeGenerationMode.POINT_BUY,
+                new AbilityScoresRequest(15, 14, 13, 12, 10, 8)
+        );
+
+        String createdResponse = mockMvc.perform(post(BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.name").value(validName))
+                .andExpect(jsonPath("$.abilityScores.strength").value(15))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String createdId = objectMapper.readTree(createdResponse).get("id").asText();
+
+        mockMvc.perform(get(BASE + "/{id}", createdId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdId))
+                .andExpect(jsonPath("$.name").value(validName))
+                .andExpect(jsonPath("$.abilityScores.strength").value(15))
+                .andExpect(jsonPath("$.abilityScores.dexterity").value(14))
+                .andExpect(jsonPath("$.abilityScores.constitution").value(13))
+                .andExpect(jsonPath("$.abilityScores.intelligence").value(12))
+                .andExpect(jsonPath("$.abilityScores.wisdom").value(10))
+                .andExpect(jsonPath("$.abilityScores.charisma").value(8));
+
+        CreateCharacterRequest overBudgetRequest = new CreateCharacterRequest(
+                "PB-OverBudget-" + UUID.randomUUID(),
+                CharacterSpecies.HUMAN,
+                CharacterClass.FIGHTER,
+                CharacterBackground.SOLDIER,
+                AttributeGenerationMode.POINT_BUY,
+                new AbilityScoresRequest(15, 15, 15, 9, 8, 8)
+        );
+
+        mockMvc.perform(post(BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(overBudgetRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Request Argument"));
+
+        CreateCharacterRequest outOfRangeRequest = new CreateCharacterRequest(
+                "PB-OutOfRange-" + UUID.randomUUID(),
+                CharacterSpecies.HUMAN,
+                CharacterClass.FIGHTER,
+                CharacterBackground.SOLDIER,
+                AttributeGenerationMode.POINT_BUY,
+                new AbilityScoresRequest(7, 14, 13, 12, 10, 8)
+        );
+
+        mockMvc.perform(post(BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(outOfRangeRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Request Argument"));
+    }
 }

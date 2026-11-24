@@ -26,7 +26,7 @@ public class CharacterController {
     private final CharacterApplicationService service;
 
     @PostMapping
-    @Operation(summary = "Create a new character", description = "Creates and validates a D&D character sheet using STANDARD_ARRAY or MANUAL attribute generation.")
+    @Operation(summary = "Create a new character", description = "Creates and validates a D&D character sheet using STANDARD_ARRAY, MANUAL, or POINT_BUY attribute generation.")
     @ApiResponse(responseCode = "201", description = "Character created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid input data or domain rule violation")
     public ResponseEntity<CharacterResponse> create(
