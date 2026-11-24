@@ -45,7 +45,10 @@ class CharacterApiIT extends AbstractIntegrationTest {
                 name,
                 CharacterSpecies.HUMAN,
                 CharacterClass.PALADIN,
-                CharacterBackground.SOLDIER,
+                CharacterBackgrouni.gisted ability scores on POINT_BUY and fix README"
+		git pushs add README.md src/test/java/com/vitorcsouza/app/characterforge/controller/CharacterApiIT.java
+git commit -m "test(it): verify persisted ability scores on POINT_BUY and fix README"
+git pushSOLDIER,
                 AttributeGenerationMode.STANDARD_ARRAY,
                 new AbilityScoresRequest(15, 14, 13, 12, 10, 8)
         );
