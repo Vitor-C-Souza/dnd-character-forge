@@ -45,7 +45,10 @@ class CharacterApiIT extends AbstractIntegrationTest {
                 name,
                 CharacterSpecies.HUMAN,
                 CharacterClass.PALADIN,
-                CharacterBackground.SOLDIER,
+                CharacterBackgrouni.gisted ability scores on POINT_BUY and fix README"
+		git pushs add README.md src/test/java/com/vitorcsouza/app/characterforge/controller/CharacterApiIT.java
+git commit -m "test(it): verify persisted ability scores on POINT_BUY and fix README"
+git pushSOLDIER,
                 AttributeGenerationMode.STANDARD_ARRAY,
                 new AbilityScoresRequest(15, 14, 13, 12, 10, 8)
         );
@@ -108,13 +111,29 @@ class CharacterApiIT extends AbstractIntegrationTest {
                 new AbilityScoresRequest(15, 14, 13, 12, 10, 8)
         );
 
-        mockMvc.perform(post(BASE)
+        String createdResponse = mockMvc.perform(post(BASE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.name").value(validName))
-                .andExpect(jsonPath("$.abilityScores.strength").value(15));
+                .andExpect(jsonPath("$.abilityScores.strength").value(15))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String createdId = objectMapper.readTree(createdResponse).get("id").asText();
+
+        mockMvc.perform(get(BASE + "/{id}", createdId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdId))
+                .andExpect(jsonPath("$.name").value(validName))
+                .andExpect(jsonPath("$.abilityScores.strength").value(15))
+                .andExpect(jsonPath("$.abilityScores.dexterity").value(14))
+                .andExpect(jsonPath("$.abilityScores.constitution").value(13))
+                .andExpect(jsonPath("$.abilityScores.intelligence").value(12))
+                .andExpect(jsonPath("$.abilityScores.wisdom").value(10))
+                .andExpect(jsonPath("$.abilityScores.charisma").value(8));
 
         CreateCharacterRequest overBudgetRequest = new CreateCharacterRequest(
                 "PB-OverBudget-" + UUID.randomUUID(),
