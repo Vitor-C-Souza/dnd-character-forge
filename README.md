@@ -33,7 +33,6 @@ Request.
 | **Atributos e modificadores** | `AbilityScores`: record imutável (`@Embeddable`) que valida pontuações entre `1` e `30` e calcula os modificadores (`Math.floorDiv(score - 10, 2)`) dos 6 atributos                                  |
 | **Bônus de proficiência**     | `ProficiencyBonus`: cálculo estático por nível (`1` a `20`), seguindo a progressão `2 + (level - 1) / 4`                                                                                             |
 | **Entidade Personagem**       | Entidade JPA `Character` que herda de `BaseEntity` (UUID, auditoria de timestamps, `@Version` para optimistic locking e exclusão lógica com `@SQLDelete` / `@SQLRestriction`)                        |
-| **Strategy e Selector**       | `AttributeGenerationStrategy` (`ManualAssignmentStrategy` e `StandardArrayStrategy`), escolhida pelo `AttributeGenerationService` via `AttributeGenerationMode`                                      |
 | **Factory**                   | `CharacterFactory`: encapsula a criação validada de `Character` na camada de serviço                                                                                                                 |
 | **Specification**             | Interface funcional `Specification<T>` com composição booleana (`and`, `or`, `not`) e regras de domínio (`CharacterClassSpecification`, `MinimumLevelSpecification`, `MinimumStrengthSpecification`) |
 | **API REST e exceções**       | `CharacterController` (`/api/v1/characters`), DTOs de entrada/saída e `GlobalExceptionHandler` padronizado com RFC 7807 (`ProblemDetail`)                                                            |
@@ -135,30 +134,29 @@ import com.vitorcsouza.app.characterforge.service.strategy.AttributeGenerationMo
 
 // 1. Seleção e validação de atributos via Strategy Selector
 AttributeGenerationService generationService = new AttributeGenerationService();
-        AttributeGenerationService generationService = new AttributeGenerationService();
-        AbilityScores rawScores = new AbilityScores(15, 14, 13, 12, 10, 8);
-        AbilityScores validatedScores = generationService.generate(AttributeGenerationMode.POINT_BUY, rawScores);
+AbilityScores rawScores = new AbilityScores(15, 14, 13, 12, 10, 8);
+AbilityScores validatedScores = generationService.generate(AttributeGenerationMode.POINT_BUY, rawScores);
 
-        // 2. Criação do personagem via Factory
-        CharacterFactory factory = new CharacterFactory();
-        Character character = factory.create(
-                "Thorin Escudo de Carvalho",
-                CharacterSpecies.DWARF,
-                CharacterClass.FIGHTER,
-                CharacterBackground.SOLDIER,
-                validatedScores
-        );
+// 2. Criação do personagem via Factory
+CharacterFactory factory = new CharacterFactory();
+Character character = factory.create(
+        "Thorin Escudo de Carvalho",
+        CharacterSpecies.DWARF,
+        CharacterClass.FIGHTER,
+        CharacterBackground.SOLDIER,
+        validatedScores
+);
 
-        // 3. Modificadores e bônus de proficiência
-        int strModifier = character.getAbilityScores().strengthModifier(); // +2
-        int profBonus = ProficiencyBonus.calculate(character.getLevel());  // +2 (nível 1)
+// 3. Modificadores e bônus de proficiência
+int strModifier = character.getAbilityScores().strengthModifier(); // +2
+int profBonus = ProficiencyBonus.calculate(character.getLevel());  // +2 (nível 1)
 
-        // 4. Regras combinadas com Specification
-        Specification<Character> heavyArmorEligible =
-                new CharacterClassSpecification(CharacterClass.FIGHTER, CharacterClass.PALADIN)
-                        .and(new MinimumStrengthSpecification(13));
+// 4. Regras combinadas com Specification
+Specification<Character> heavyArmorEligible =
+        new CharacterClassSpecification(CharacterClass.FIGHTER, CharacterClass.PALADIN)
+                .and(new MinimumStrengthSpecification(13));
 
-        boolean isEligible = heavyArmorEligible.isSatisfiedBy(character); // true
+boolean isEligible = heavyArmorEligible.isSatisfiedBy(character); // true
 ```
 
 ## Endpoints da API
@@ -171,6 +169,29 @@ AttributeGenerationService generationService = new AttributeGenerationService();
 | `PATCH`  | `/api/v1/characters/{id}/ability-scores` | Atualiza os atributos de um personagem existente                 |
 | `DELETE` | `/api/v1/characters/{id}`                | Realiza a exclusão lógica (soft delete) do personagem            |
 
+### Exemplo: criação com Point Buy
+
+O campo generationMode seleciona a modalidade de geração. Para Point Buy, os seis atributos devem respeitar a faixa de 8 a 15 e o orçamento máximo de 27 pontos.
+
+~~~bash
+curl -X POST http://localhost:8080/api/v1/characters \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Thorin",
+    "species": "DWARF",
+    "characterClass": "FIGHTER",
+    "background": "SOLDIER",
+    "generationMode": "POINT_BUY",
+    "abilityScores": {
+      "strength": 15,
+      "dexterity": 14,
+      "constitution": 13,
+      "intelligence": 12,
+      "wisdom": 10,
+      "charisma": 8
+    }
+  }'
+~~~
 A documentação interativa fica disponível no Swagger UI (veja [Endereços locais](#endereços-locais)).
 
 ## Executar localmente
