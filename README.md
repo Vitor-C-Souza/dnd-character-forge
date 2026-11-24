@@ -19,7 +19,8 @@
 ## Sobre o projeto
 
 O D&D Character Forge aplica **modelagem de domínio rica**, **Design Patterns**, **persistência relacional com
-versionamento de schema** e **testes automatizados**, tudo entregue em incrementos pequenos e revisáveis por Pull Request.
+versionamento de schema** e **testes automatizados**, tudo entregue em incrementos pequenos e revisáveis por Pull
+Request.
 
 ## Navegação
 
@@ -27,28 +28,29 @@ versionamento de schema** e **testes automatizados**, tudo entregue em increment
 
 ## Estado atual
 
-| Componente                    | Implementação                                                                                                                                                                                       |
-|-------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Componente                    | Implementação                                                                                                                                                                                        |
+|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Atributos e modificadores** | `AbilityScores`: record imutável (`@Embeddable`) que valida pontuações entre `1` e `30` e calcula os modificadores (`Math.floorDiv(score - 10, 2)`) dos 6 atributos                                  |
-| **Bônus de proficiência**     | `ProficiencyBonus`: cálculo estático por nível (`1` a `20`), seguindo a progressão `2 + (level - 1) / 4`                                                                                            |
-| **Entidade Personagem**       | Entidade JPA `Character` que herda de `BaseEntity` (UUID, auditoria de timestamps, `@Version` para optimistic locking e exclusão lógica com `@SQLDelete` / `@SQLRestriction`)                       |
-| **Strategy e Selector**       | `AttributeGenerationStrategy` (`ManualAssignmentStrategy` e `StandardArrayStrategy`), escolhida pelo `AttributeGenerationService` via `AttributeGenerationMode`                                     |
-| **Factory**                   | `CharacterFactory`: encapsula a criação validada de `Character` na camada de serviço                                                                                                                |
+| **Bônus de proficiência**     | `ProficiencyBonus`: cálculo estático por nível (`1` a `20`), seguindo a progressão `2 + (level - 1) / 4`                                                                                             |
+| **Entidade Personagem**       | Entidade JPA `Character` que herda de `BaseEntity` (UUID, auditoria de timestamps, `@Version` para optimistic locking e exclusão lógica com `@SQLDelete` / `@SQLRestriction`)                        |
+| **Strategy e Selector**       | `AttributeGenerationStrategy` (`ManualAssignmentStrategy` e `StandardArrayStrategy`), escolhida pelo `AttributeGenerationService` via `AttributeGenerationMode`                                      |
+| **Factory**                   | `CharacterFactory`: encapsula a criação validada de `Character` na camada de serviço                                                                                                                 |
 | **Specification**             | Interface funcional `Specification<T>` com composição booleana (`and`, `or`, `not`) e regras de domínio (`CharacterClassSpecification`, `MinimumLevelSpecification`, `MinimumStrengthSpecification`) |
-| **API REST e exceções**       | `CharacterController` (`/api/v1/characters`), DTOs de entrada/saída e `GlobalExceptionHandler` padronizado com RFC 7807 (`ProblemDetail`)                                                           |
-| **Persistência e infra**      | MySQL 8.4, Flyway (`V1__CREATE_TABLE.sql`), Dockerfile multi-stage e Docker Compose com health checks                                                                                              |
-| **Qualidade e CI**            | Testes unitários (JUnit 5/Mockito) e de integração com MySQL real (Surefire/Failsafe), JaCoCo e pipeline GitHub Actions + SonarCloud                                                                |
+| **API REST e exceções**       | `CharacterController` (`/api/v1/characters`), DTOs de entrada/saída e `GlobalExceptionHandler` padronizado com RFC 7807 (`ProblemDetail`)                                                            |
+| **Persistência e infra**      | MySQL 8.4, Flyway (`V1__CREATE_TABLE.sql`), Dockerfile multi-stage e Docker Compose com health checks                                                                                                |
+| **Qualidade e CI**            | Testes unitários (JUnit 5/Mockito) e de integração com MySQL real (Surefire/Failsafe), JaCoCo e pipeline GitHub Actions + SonarCloud                                                                 |
+| **Strategy e Selector**       | `AttributeGenerationStrategy` (`ManualAssignmentStrategy`, `StandardArrayStrategy` e `PointBuyStrategy`), escolhida pelo `AttributeGenerationService` via `AttributeGenerationMode`                  |
 
 ## Stack
 
-| Área                    | Tecnologias                                                                |
-|-------------------------|----------------------------------------------------------------------------|
-| **Linguagem e build**   | Java 21, Maven 3.9+                                                        |
-| **Framework**           | Spring Boot 3.5.7 (Spring Web, Bean Validation, Spring Data JPA, Actuator) |
-| **Banco e migrations**  | MySQL 8.4, Flyway                                                          |
-| **Documentação HTTP**   | Springdoc OpenAPI 2.8.13 (Swagger UI)                                      |
+| Área                    | Tecnologias                                                                   |
+|-------------------------|-------------------------------------------------------------------------------|
+| **Linguagem e build**   | Java 21, Maven 3.9+                                                           |
+| **Framework**           | Spring Boot 3.5.7 (Spring Web, Bean Validation, Spring Data JPA, Actuator)    |
+| **Banco e migrations**  | MySQL 8.4, Flyway                                                             |
+| **Documentação HTTP**   | Springdoc OpenAPI 2.8.13 (Swagger UI)                                         |
 | **Testes**              | JUnit 5, Mockito, AssertJ, Spring Boot Test, Testcontainers (`*Test` e `*IT`) |
-| **Infraestrutura e CI** | Docker, Docker Compose, GitHub Actions, JaCoCo 0.8.13, SonarCloud          |
+| **Infraestrutura e CI** | Docker, Docker Compose, GitHub Actions, JaCoCo 0.8.13, SonarCloud             |
 
 ## Arquitetura e padrões
 
@@ -65,7 +67,7 @@ src/main/java/com/vitorcsouza/app/characterforge/
 ├── exception/         # Tratamento global de erros com ProblemDetail (RFC 7807)
 ├── repository/        # Repositórios Spring Data JPA
 └── service/
-    ├── strategy/                        # Estratégias de geração de atributos (Manual e Standard Array)
+    ├── strategy/                        # Estratégias de geração de atributos (Manual, Standard Array e Point Buy)
     ├── AttributeGenerationService.java  # Strategy Selector
     ├── CharacterApplicationService.java # Orquestração dos casos de uso
     └── CharacterFactory.java            # Factory de criação de personagens
@@ -86,6 +88,7 @@ classDiagram
     }
     class ManualAssignmentStrategy
     class StandardArrayStrategy
+    class PointBuyStrategy
     class Specification~T~ {
         <<interface>>
         +isSatisfiedBy(candidate) boolean
@@ -105,9 +108,10 @@ classDiagram
     AttributeGenerationService --> AttributeGenerationStrategy
     AttributeGenerationStrategy <|.. ManualAssignmentStrategy
     AttributeGenerationStrategy <|.. StandardArrayStrategy
+    AttributeGenerationStrategy <|.. PointBuyStrategy
     CharacterFactory --> Character
     Character *-- AbilityScores
-    Specification ..> Character : avalia
+    Specification ..> Character: avalia
 ```
 
 ### Exemplo de uso no código
@@ -131,40 +135,41 @@ import com.vitorcsouza.app.characterforge.service.strategy.AttributeGenerationMo
 
 // 1. Seleção e validação de atributos via Strategy Selector
 AttributeGenerationService generationService = new AttributeGenerationService();
-AbilityScores rawScores = new AbilityScores(15, 14, 13, 12, 10, 8);
-AbilityScores validatedScores = generationService.generate(AttributeGenerationMode.STANDARD_ARRAY, rawScores);
+        AttributeGenerationService generationService = new AttributeGenerationService();
+        AbilityScores rawScores = new AbilityScores(15, 14, 13, 12, 10, 8);
+        AbilityScores validatedScores = generationService.generate(AttributeGenerationMode.POINT_BUY, rawScores);
 
-// 2. Criação do personagem via Factory
-CharacterFactory factory = new CharacterFactory();
-Character character = factory.create(
-        "Thorin Escudo de Carvalho",
-        CharacterSpecies.DWARF,
-        CharacterClass.FIGHTER,
-        CharacterBackground.SOLDIER,
-        validatedScores
-);
+        // 2. Criação do personagem via Factory
+        CharacterFactory factory = new CharacterFactory();
+        Character character = factory.create(
+                "Thorin Escudo de Carvalho",
+                CharacterSpecies.DWARF,
+                CharacterClass.FIGHTER,
+                CharacterBackground.SOLDIER,
+                validatedScores
+        );
 
-// 3. Modificadores e bônus de proficiência
-int strModifier = character.getAbilityScores().strengthModifier(); // +2
-int profBonus = ProficiencyBonus.calculate(character.getLevel());  // +2 (nível 1)
+        // 3. Modificadores e bônus de proficiência
+        int strModifier = character.getAbilityScores().strengthModifier(); // +2
+        int profBonus = ProficiencyBonus.calculate(character.getLevel());  // +2 (nível 1)
 
-// 4. Regras combinadas com Specification
-Specification<Character> heavyArmorEligible =
-        new CharacterClassSpecification(CharacterClass.FIGHTER, CharacterClass.PALADIN)
-                .and(new MinimumStrengthSpecification(13));
+        // 4. Regras combinadas com Specification
+        Specification<Character> heavyArmorEligible =
+                new CharacterClassSpecification(CharacterClass.FIGHTER, CharacterClass.PALADIN)
+                        .and(new MinimumStrengthSpecification(13));
 
-boolean isEligible = heavyArmorEligible.isSatisfiedBy(character); // true
+        boolean isEligible = heavyArmorEligible.isSatisfiedBy(character); // true
 ```
 
 ## Endpoints da API
 
-| Método   | Rota                                     | Descrição                                                             |
-|----------|------------------------------------------|-----------------------------------------------------------------------|
-| `POST`   | `/api/v1/characters`                     | Cria um personagem aplicando a estratégia de atributos escolhida      |
-| `GET`    | `/api/v1/characters`                     | Lista os personagens ativos (não excluídos logicamente)               |
-| `GET`    | `/api/v1/characters/{id}`                | Busca um personagem ativo por UUID                                    |
-| `PATCH`  | `/api/v1/characters/{id}/ability-scores` | Atualiza os atributos de um personagem existente                      |
-| `DELETE` | `/api/v1/characters/{id}`                | Realiza a exclusão lógica (soft delete) do personagem                 |
+| Método   | Rota                                     | Descrição                                                        |
+|----------|------------------------------------------|------------------------------------------------------------------|
+| `POST`   | `/api/v1/characters`                     | Cria um personagem aplicando a estratégia de atributos escolhida |
+| `GET`    | `/api/v1/characters`                     | Lista os personagens ativos (não excluídos logicamente)          |
+| `GET`    | `/api/v1/characters/{id}`                | Busca um personagem ativo por UUID                               |
+| `PATCH`  | `/api/v1/characters/{id}/ability-scores` | Atualiza os atributos de um personagem existente                 |
+| `DELETE` | `/api/v1/characters/{id}`                | Realiza a exclusão lógica (soft delete) do personagem            |
 
 A documentação interativa fica disponível no Swagger UI (veja [Endereços locais](#endereços-locais)).
 
@@ -211,7 +216,8 @@ docker compose down -v
 
 ### 3. Executar a aplicação pela IDE ou pelo Maven
 
-Para iniciar a aplicação fora do Docker Compose, disponibilize um MySQL 8.4 acessível. Se quiser usar o banco definido no Compose do projeto, suba somente o serviço `mysql`:
+Para iniciar a aplicação fora do Docker Compose, disponibilize um MySQL 8.4 acessível. Se quiser usar o banco definido
+no Compose do projeto, suba somente o serviço `mysql`:
 
 ```bash
 docker compose up -d mysql
@@ -238,7 +244,11 @@ Execute a suíte completa com:
 mvn clean verify
 ```
 
-Os testes de integração que estendem `AbstractIntegrationTest` — incluindo `CharacterForgeApplicationTest` e os testes `*IT.java` executados pelo Maven Failsafe — usam **Testcontainers** para iniciar automaticamente um container efêmero do MySQL 8.4 (`mysql:8.4`). Os demais testes unitários não dependem de um banco MySQL externo. Portanto, para executar a suíte completa, basta manter o Docker Engine / Docker Desktop em execução: **não é necessário subir previamente o serviço MySQL do Compose nem configurar um banco externo**.
+Os testes de integração que estendem `AbstractIntegrationTest` — incluindo `CharacterForgeApplicationTest` e os testes
+`*IT.java` executados pelo Maven Failsafe — usam **Testcontainers** para iniciar automaticamente um container efêmero do
+MySQL 8.4 (`mysql:8.4`). Os demais testes unitários não dependem de um banco MySQL externo. Portanto, para executar a
+suíte completa, basta manter o Docker Engine / Docker Desktop em execução: **não é necessário subir previamente o
+serviço MySQL do Compose nem configurar um banco externo**.
 
 ### Endereços locais
 
@@ -268,8 +278,7 @@ mvn clean verify
 O workflow `.github/workflows/ci.yml` executa `mvn clean verify` e publica os relatórios como artefatos por 7 dias. Como
 os testes de integração usam Testcontainers, o pipeline não precisa de um serviço MySQL externo no GitHub Actions.
 
-A etapa `SonarCloud analysis` depende das configurações do repositório
-(**Settings → Secrets and variables → Actions**):
+A etapa `SonarCloud analysis` depende das configurações do repositório (**Settings → Secrets and variables → Actions**):
 
 | Tipo                 | Nome                 | Finalidade                          |
 |----------------------|----------------------|-------------------------------------|
@@ -290,4 +299,5 @@ Enquanto `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` não estiverem configuradas,
 
 ## Autor
 
-**Vítor Cavalcante Souza** · [GitHub](https://github.com/Vitor-C-Souza) · [LinkedIn](https://www.linkedin.com/in/vitorcavalcantesouza/)
+**Vítor Cavalcante
+Souza** · [GitHub](https://github.com/Vitor-C-Souza) · [LinkedIn](https://www.linkedin.com/in/vitorcavalcantesouza/)
